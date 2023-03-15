@@ -14,7 +14,7 @@ This package enables coordinate conversion between the following popular coordin
 
 For the most common coordinate systems, there exist direct conversion functions (e.g., Lat/Long <> UTM). However, less popular coordinate systems may require conversion via a more popular intermediary system (e.g., USNG <> UTM <> Lat/Long). More coordinate systems may be added to the package depending on demand and feasibility. 
 
-This code is written as lightweight and computationally efficient. The 'EasyCoord' package seeks to address the need to convert a large amount of data. Moreover, the code is structured intuitively. Inputs are segmented into idiosyncratic input parameters. This may require the user to conduct pre-emptive wrangling to shape the data into the correct format. 
+This code is written as lightweight and computationally efficient. The 'EasyCoord' package addresses the need to convert a large amount of data. Moreover, the functions are structured intuitively. Inputs are segmented into idiosyncratic input parameters. This may require the user to conduct pre-emptive wrangling to shape the data into the correct format. 
 
 Each common conversion pair comes with a function. For instance, the `_LLtoUTM.R` file contains the function converting Decimal Degrees to UTM and the `_UTMtoLL.R` file converts in the opposite order. 
 
@@ -38,7 +38,7 @@ UTMtoLL <- function (ellipsoid_name, UTMNorthing, UTMEasting, UTMZone, UTMBand){
                     }
 ```
 
-Note how both function require different input parameters due to the structure of the respective input coordinate system. Aside from the coordinate-specific inputs, all functions require the specification of the ellipsoid. While almost all modern U.S.-based coordinate systems rely on the WGS_84 datum, this may vary for older data and for different regions. The WGS_84 datum can be thought of as the basis for the three-dimensional projection of any coordinate system.  
+Note how both functions require different input parameters due to the structure of the respective input coordinate system. Aside from the coordinate-specific inputs, all functions require the specification of the ellipsoid. While almost all modern U.S.-based coordinate systems rely on the WGS_84 datum, this may vary for older data and for different regions. The WGS_84 datum can be thought of as the basis for the three-dimensional projection of any coordinate system.  
 
 The function body is mainly derived from the U.S. Geological Survey, such as [Professional Paper 1395](https://pubs.er.usgs.gov/publication/pp1395). In that sense, most of the code is derived from the equations set forth in these key pieces of literature. 
 
