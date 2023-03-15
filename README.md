@@ -250,6 +250,6 @@ The `_LLtoUTM.R` file then proceeds by
 
 The result is the conversion of decimal coordinates to UTM grid: 
 
-![Chart1](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.dmap.co.uk%2Futmworld.htm&psig=AOvVaw0GNHO1uRK9erz1A5pKe8uI&ust=1678932422311000&source=images&cd=vfe&ved=0CA8QjRxqFwoTCPij5ubs3P0CFQAAAAAdAAAAABAO)
+![Chart1](https://earth-info.nga.mil/img/utm_fig1.jpg)
 
 For suggestions, comments, or concerns, please do not hesitate to reach out to me at posmikdc[at]uchicago[dot]edu.
