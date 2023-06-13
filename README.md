@@ -1,20 +1,14 @@
-# Easy Coordinate Conversion (EasyCoord) Package
+# Conversion between Decimal and UTM Coordinates
 
-The `EasyCoord` package facilitates the conversion of coordinate systems in R. Previously, the conversion of coordinate systems was only possible in GIS software or through subscription-based third party entities. This package enables an easy-to-use and intuitive alternative for R users. 
+These functions enable the automated conversion between decimal and UTM coordinates in R. Previously, the conversion of coordinate systems was only possible in GIS software or through subscription-based third party entities.
 
-The 'EasyCoord' package is a work in progress and submission to CRAN is forthcoming. All code shared in the repository is preliminary. 
+This code was developed over the course of a brief undergraduate research assistantship with Professor Olivier Parent, a spatial econometrician at the University of Cincinnati. 
 
-This package enables coordinate conversion between the following popular coordinate systems:
+The function enables coordinate conversion between the following coordinate systems:
 * Decimal Degrees (LatLong)
 * Universal Transverse Mercator (UTM)
-* United States National Grid (USNG)/ Military Grid Reference System (MGRS)
-* Global Area Reference System (GARS)
-* Geographic Reference System (GEOREF)
-* Plus Code
 
-For the most common coordinate systems, there exist direct conversion functions (e.g., Lat/Long <> UTM). However, less popular coordinate systems may require conversion via a more popular intermediary system (e.g., USNG <> UTM <> Lat/Long). More coordinate systems may be added to the package depending on demand and feasibility. 
-
-This code is written as lightweight and computationally efficient. The 'EasyCoord' package addresses the need to convert a large amount of data. Moreover, the functions are structured intuitively. Inputs are segmented into idiosyncratic input parameters. This may require the user to conduct pre-emptive wrangling to shape the data into the correct format. 
+This code is written as lightweight and computationally efficient. It prioritizes the need to convert large amounts of data. Moreover, the functions are structured intuitively. Inputs are segmented into idiosyncratic input parameters. This may require the user to conduct pre-emptive wrangling to shape the data into the correct format. 
 
 Each common conversion pair comes with a function. For instance, the `_LLtoUTM.R` file contains the function converting Decimal Degrees to UTM and the `_UTMtoLL.R` file converts in the opposite order. 
 
@@ -22,11 +16,9 @@ Let us take a look at this function:
 
 ## Example 1: The Function Shell
 
-The [`EasyCoord` package](https://github.com/posmikdc/easycoord) seeks to make dealing with intricate spatial data easy. To avoid inaccuracy, misspecification, or errors, each function is designed to receive each component of the coordinate system separately.
+To avoid inaccuracy, misspecification, or errors, each function is designed to receive each component of the coordinate system separately.
 
 ```{r}
-library(EasyCoord)
-
 # The shell of the LL to UTM function
 LLtoUTM <- function (ellipsoid_name, lat, long) { 
                     ...
@@ -57,11 +49,11 @@ ellipsoid_df <- data.frame(
                      "Clarke_1866", "Clarke_1880", "Everest", 
                      "Fischer_1960", "International_1924", "South_American_1969", 
                      "WGS_72", "GRS_80", "WGS_84"), 
-  a = c(6377563, 6378160, 6377397,                               #Semi-Major Axis "Equitorial Radius" [m]
+  a = c(6377563, 6378160, 6377397,      #Semi-Major Axis "Equitorial Radius" [m]
         6378206, 6378249, 6377276, 
         6378155, 6378388, 6378160, 
         6378135, 6378137, 6378137),
-  b = c(6356257, 6356775, 6356079,                               #Semi-Minor Axis "Polar Radius" [m]
+  b = c(6356257, 6356775, 6356079,      #Semi-Minor Axis "Polar Radius" [m]
         6356584, 6356516, 6356075, 
         6356773, 6356912, 6356774,
         6356751, 6356752, 6356752)
@@ -75,20 +67,21 @@ ellipsoid_df <- data.frame(
 
 # Calculate ellipsoidal parameters ---------------------------------------------
 ellipsoid_df %<>%
-  mutate(f = (a - b) / a) %>%                                    #Calculate flattening
-  mutate(inv_f = 1 / f) %>%                                      #Calculate inverse flattening
-  mutate(ecc_sq = 2*f - f^2)                                     #Calculate eccentricity squared
+  mutate(f = (a - b) / a) %>%           #Calculate flattening
+  mutate(inv_f = 1 / f) %>%             #Calculate inverse flattening
+  mutate(ecc_sq = 2*f - f^2)            #Calculate eccentricity squared
 
 #Formulas retrieved from Peter H. Dana's website 
 #https://foote.geography.uconn.edu/gcraft/notes/coordsys/coordsys_f.html
-#The Geographer’s Craft Project, Department of Geography, University of Connecticut
+#The Geographer’s Craft Project, Department of Geography, UConn
 #Contact: pdana@pdana.com; ken.foote@uconn.edu
 #Accessed on: December 27th, 2022
 
 # Define additional ellipsoidal parameters -------------------------------------
-k0 = 0.9996                                                      #Central meridian scale factor
+k0 = 0.9996                             #Central meridian scale factor
 
-#Value retrieved from the U.S. Geological Survey (USGS) Professional Paper 1395 (1987) (p.57, ¶3)
+#Value retrieved from the U.S. Geological Survey 
+#(USGS) Professional Paper 1395 (1987) (p.57, ¶3)
 #https://pubs.usgs.gov/pp/1395/report.pdf
 #Accessed on: December 27th, 2022
 
@@ -97,9 +90,11 @@ k0 = 0.9996                                                      #Central meridi
 ################################################################################
   
 # Retrieve ellipsoidal parameters by ellipsoid -------------------------------
-a = ellipsoid_df$a[which(ellipsoid_df$ellipsoid_name           #Retrieve equatorial radius by ellipsoid
+#Retrieve equatorial radius by ellipsoid
+a = ellipsoid_df$a[which(ellipsoid_df$ellipsoid_name           
                          == ellipsoid_name)]
-ecc_sq = ellipsoid_df$ecc_sq[which(ellipsoid_df$ellipsoid_name #Retrieve eccentricity squared by ellipsoid  
+#Retrieve eccentricity squared by ellipsoid  
+ecc_sq = ellipsoid_df$ecc_sq[which(ellipsoid_df$ellipsoid_name 
                                    == ellipsoid_name)]
 
 # Convert to Radians ---------------------------------------------------------
@@ -107,36 +102,39 @@ lat_rad <- lat*pi/180
 long_rad <- long*pi/180 
 
 # Calculate Longitudinal Projection Zones ("Zones") --------------------------
-UTMZone<- NULL                                                 #Empty vector shell
+UTMZone<- NULL                          #Empty vector shell
 
 for(i in 1:length(long)){ 
-  if(lat[i] >= 72.0 && lat[i] < 84.0){                         #Defintion of Svalbard zones
+  #Definition of Svalbard zones
+  if(lat[i] >= 72.0 && lat[i] < 84.0){                 
       #There are four irregular zones near Svalbard
-      if(long[i] >= 0.0 && long[i] < 9.0){                     #Zone 31
+      if(long[i] >= 0.0 && long[i] < 9.0){            #Zone 31
         UTMZone[i]<- "31"                    
-      } else if(long[i] >= 9.0 && long[i] < 21.0){             #Zone 33
+      } else if(long[i] >= 9.0 && long[i] < 21.0){    #Zone 33
         UTMZone[i]<- "33" 
-      } else if(long[i] >= 21.0 && long[i] < 33.0){            #Zone 35
+      } else if(long[i] >= 21.0 && long[i] < 33.0){   #Zone 35
         UTMZone[i]<- "35" 
-      } else if(long[i] >= 33.0 && long[i] < 42.0){            #Zone 37
+      } else if(long[i] >= 33.0 && long[i] < 42.0){   #Zone 37
         UTMZone[i]<- "37" 
       }
   }
       #There is one irregular zone for Norway
-  else if(lat[i] >= 56.0 && lat[i] < 64.0 &&                   #Definition of Norway Zone
+  else if(lat[i] >= 56.0 && lat[i] < 64.0 &&         #Define Norway Zone
           long[i] >= 3.0 && long[i] < 12.0){
-        UTMZone[i]<- "32"                                      #Zone 32
+        UTMZone[i]<- "32"                            #Zone 32
       }
       #Calculation of regular zones
   else{
-        UTMZone<- floor(((long + 180)/6) %% 60) + 1            #Calculation and standardization
+        #Calculation/ standardization
+        UTMZone<- floor(((long + 180)/6) %% 60) + 1  
   }
 }
 
 #Convert results to numeric strings
 UTMZone <- as.numeric(UTMZone)
 
-#Data retrieved from the U.S. Geological Survey (USGS) Professional Paper 1395 (1987) (p.62, Figure 11)
+#Data retrieved from the U.S. Geological Survey (USGS) 
+#Professional Paper 1395 (1987) (p.62, Figure 11)
 #https://pubs.usgs.gov/pp/1395/report.pdf
 #Accessed on: January 10th, 2023
 
@@ -148,14 +146,20 @@ long_origin = (UTMZone - 1)*6 - 180 + 3
 long_origin_rad = long_origin*(pi/180)
 
 #Variables
-eccprime_sq = (ecc_sq^2)/(1 - ecc_sq^2)                        #USGS Professional Paper 1395 (1987), p.61 (8-12)
-N = a/sqrt(1-ecc_sq*sin(lat_rad)*sin(lat_rad))                 #USGS Professional Paper 1395 (1987), p.61 (4-20)
-T = tan(lat_rad)*tan(lat_rad)                                  #USGS Professional Paper 1395 (1987), p.61 (8-13)
-C = eccprime_sq*cos(lat_rad)*cos(lat_rad)                      #USGS Professional Paper 1395 (1987), p.61 (8-14)
-A = cos(lat_rad)*(long_rad - long_origin_rad)                  #USGS Professional Paper 1395 (1987), p.61 (8-15)
+#USGS Professional Paper 1395 (1987), p.61 (8-12)
+eccprime_sq = (ecc_sq^2)/(1 - ecc_sq^2)                        
+#USGS Professional Paper 1395 (1987), p.61 (4-20)
+N = a/sqrt(1-ecc_sq*sin(lat_rad)*sin(lat_rad))                 
+#USGS Professional Paper 1395 (1987), p.61 (8-13)
+T = tan(lat_rad)*tan(lat_rad)                                  
+#USGS Professional Paper 1395 (1987), p.61 (8-14)
+C = eccprime_sq*cos(lat_rad)*cos(lat_rad)                      
+#USGS Professional Paper 1395 (1987), p.61 (8-15)
+A = cos(lat_rad)*(long_rad - long_origin_rad)                  
 
-#Calculate the true distance along the central meridian from the Equator to lat_rad
-M = a*((1                                                      #USGS Professional Paper 1395 (1987), p.61 (3-21)
+#Calculate the distance along central meridian from the Equator to lat_rad
+#USGS Professional Paper 1395 (1987), p.61 (3-21)
+M = a*((1                                                      
         - ecc_sq/4
         - 3*ecc_sq*ecc_sq/64
         - 5*ecc_sq*ecc_sq*ecc_sq/256)*lat_rad 
@@ -165,78 +169,83 @@ M = a*((1                                                      #USGS Professiona
         + (15*ecc_sq*ecc_sq/256 + 45*ecc_sq*ecc_sq*ecc_sq/1024)*sin(4*lat_rad) 
         - (35*ecc_sq*ecc_sq*ecc_sq/3072)*sin(6*lat_rad))
 
-#Formulas retrieved from the U.S. Geological Survey (USGS) Professional Paper 1395 (1987) (p.61)
+#Formulas retrieved from the U.S. Geological Survey (USGS) 
+#Professional Paper 1395 (1987) (p.61)
 #https://pubs.usgs.gov/pp/1395/report.pdf
 #Accessed on: January 10th, 2023
 
 # Calculate UTM Coordinates --------------------------------------------------
 #Calculate Easting Coordinates
-UTMEasting = (k0*N*(A+(1-T+C)*A*A*A/6                          #USGS Professional Paper 1395 (1987), p.61 (8-9)
+#USGS Professional Paper 1395 (1987), p.61 (8-9)
+UTMEasting = (k0*N*(A+(1-T+C)*A*A*A/6                          
                     + (5-18*T+T*T+72*C-58*eccprime_sq)*A*A*A*A*A/120)
                     + 500000.0)
 #Calculate Northing Coordinates
-UTMNorthing = (k0*(M+N*tan(lat_rad)*                           #USGS Professional Paper 1395 (1987), p.61 (8-10)
+#USGS Professional Paper 1395 (1987), p.61 (8-10)
+UTMNorthing = (k0*(M+N*tan(lat_rad)*                           
                     (A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24
                     + (61-58*T+T*T+600*C
                     - 330*eccprime_sq)*A*A*A*A*A*A/720)))
 
 #Adjust 1e7 meters if the coordinates are in the Southern hemisphere
 if (lat[i] < 0) {
-  UTMNorthing = UTMNorthing + 1e7                              #USGS Professional Paper 1395 (1987), p.58, ¶2 
+#USGS Professional Paper 1395 (1987), p.58, ¶2 
+  UTMNorthing = UTMNorthing + 1e7                              
 } else {
   UTMNorthing = UTMNorthing
 }
 
-#Formulas retrieved from the U.S. Geological Survey (USGS) Professional Paper 1395 (1987) (p.61)
+#Formulas retrieved from the U.S. Geological Survey (USGS) 
+#Professional Paper 1395 (1987) (p.61)
 #https://pubs.usgs.gov/pp/1395/report.pdf
 #Accessed on: January 10th, 2023
 
 # Assign Latitudinal Letter Designator ---------------------------------------
-UTMBand<-NULL                                                  #Empty vector shell
+UTMBand<-NULL                                 #Empty vector shell
 
 for(i in 1:length(lat)){ 
-  if(84 >= lat[i] && lat[i] >= 72){                            #X band
+  if(84 >= lat[i] && lat[i] >= 72){           #X band
     UTMBand[i] <- "X"
-  } else if(72 > lat[i] && lat[i] >= 64){                      #W band
+  } else if(72 > lat[i] && lat[i] >= 64){     #W band
     UTMBand[i] <- "W"
-  } else if(64 > lat[i] && lat[i] >= 56){                      #V band
+  } else if(64 > lat[i] && lat[i] >= 56){     #V band
     UTMBand[i] <- "V"
-  } else if(56 > lat[i] && lat[i] >= 48){                      #U band
+  } else if(56 > lat[i] && lat[i] >= 48){     #U band
     UTMBand[i] <- "U"
-  } else if(48 > lat[i] && lat[i] >= 40){                      #T band
+  } else if(48 > lat[i] && lat[i] >= 40){     #T band
     UTMBand[i] <- "T"
-  } else if(40 > lat[i] && lat[i] >= 32){                      #S band
+  } else if(40 > lat[i] && lat[i] >= 32){     #S band
     UTMBand[i] <- "S"
-  } else if(32 > lat[i] && lat[i] >= 24){                      #R band
+  } else if(32 > lat[i] && lat[i] >= 24){     #R band
     UTMBand[i] <- "R"
-  } else if(24 > lat[i] && lat[i] >= 16){                      #Q band
+  } else if(24 > lat[i] && lat[i] >= 16){     #Q band
     UTMBand[i] <- "Q"
-  } else if(16 > lat[i] && lat[i] >= 8){                       #P band
+  } else if(16 > lat[i] && lat[i] >= 8){      #P band
     UTMBand[i] <- "P"
-  } else if(8 > lat[i] && lat[i] >= 0){                        #N band
+  } else if(8 > lat[i] && lat[i] >= 0){       #N band
     UTMBand[i] <- "N" 
-  } else if(0 > lat[i] && lat[i] >= -8){                       #M band
+  } else if(0 > lat[i] && lat[i] >= -8){      #M band
     UTMBand[i] <- "M"
-  } else if(-8 > lat[i] && lat[i] >= -16){                     #L band
+  } else if(-8 > lat[i] && lat[i] >= -16){    #L band
     UTMBand[i] <- "L"
-  } else if(-16 > lat[i] && lat[i] >= -24){                    #K band
+  } else if(-16 > lat[i] && lat[i] >= -24){   #K band
     UTMBand[i] <- "K"
-  } else if(-24 > lat[i] && lat[i] >= -32){                    #J band
+  } else if(-24 > lat[i] && lat[i] >= -32){   #J band
     UTMBand[i] <- "J"
-  } else if(-32 > lat[i] && lat[i] >= -40){                    #H band
+  } else if(-32 > lat[i] && lat[i] >= -40){   #H band
     UTMBand[i] <- "H"
-  } else if(-40 > lat[i] && lat[i] >= -48){                    #G band
+  } else if(-40 > lat[i] && lat[i] >= -48){   #G band
     UTMBand[i] <- "G"
-  } else if(-48 > lat[i] && lat[i] >= -56){                    #F band
+  } else if(-48 > lat[i] && lat[i] >= -56){   #F band
     UTMBand[i] <- "F"
-  } else if(-56 > lat[i] && lat[i] >= -64){                    #E band
+  } else if(-56 > lat[i] && lat[i] >= -64){   #E band
     UTMBand[i] <- "E"
-  } else if(-64 > lat[i] && lat[i] >= -72){                    #D band
+  } else if(-64 > lat[i] && lat[i] >= -72){   #D band
     UTMBand[i] <- "D"
-  } else if(-72 > lat[i] && lat[i] >= -80){                    #C band
+  } else if(-72 > lat[i] && lat[i] >= -80){   #C band
     UTMBand[i] <- "C"
   } else{
-    UTMBand[i] <- "Z"                                          #Z band
+    UTMBand[i] <- "Z"                         #Z band
   }
 }
 ```
@@ -249,4 +258,4 @@ The `_LLtoUTM.R` file then proceeds by
 * Obtaining the Northing and Easting coordinates through a sequence of geodetic formulas
 * Assigning a UTM Band
 
-For suggestions, comments, or concerns, please do not hesitate to reach out to me at posmikdc[at]uchicago[dot]edu.
+For suggestions, comments, or concerns, please do not hesitate to reach out to me at posmikdc[at]gmail[dot]com.
